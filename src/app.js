@@ -9,6 +9,6 @@ app.use(cors({
 }))
 app.use(morgan("short"))
 app.use(express.json());
-app.use(planetsRouter)
-app.use(launchesRouter)
+app.use("/planets", planetsRouter)
+app.use("/launches",launchesRouter)
 module.exports = app;
