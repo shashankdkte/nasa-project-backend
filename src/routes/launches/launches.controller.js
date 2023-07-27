@@ -1,4 +1,4 @@
-const {getAllLaunches,addNewLaunch,launchExist,abortLaunch} = require("../../models/launches.model")
+const {getAllLaunches,scheduleNewLaunch,launchExist,abortLaunch} = require("../../models/launches.model")
 async function httpGetAllLaunches(req,res)
 {
   const launches = await getAllLaunches();
@@ -20,7 +20,7 @@ return res.status(200).json(launches)
       error: 'Invalid launch date',
     });
   }
-  await addNewLaunch(launch)
+  await scheduleNewLaunch(launch)
   return res.status(201).json(launch);
 }
 
