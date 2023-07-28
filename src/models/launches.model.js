@@ -1,9 +1,13 @@
+const axios = require("axios");
+
 const launchesDatabase = require("./launches.mongo");
 const planets = require("./planets.mongo");
 
 const launches = new Map();
 let latestflightNumber = 100;
 const DEFAULT_FLIGHT_NUMBER = 100;
+
+const SPACE_API_URL = 'https://api.spacexdata.com/v5/launches/query'
 const launch = {
   flightNumber: 100,
   mission: "Kepler Exploration X",
@@ -17,7 +21,51 @@ const launch = {
 
 //launches.set(launch.flightNumber, launch);
 saveLaunch(launch);
+async function loadLaunchData()
+{
+  console.log("Downloading Data...");
+  const response = await axios.post(SPACE_API_URL, {
+    query: {},
+    options: {
+      pagination: false,
+      populate: [
+        {
+          path: 'rocket',
+          select: {
+            name: 1
+          }
+        }, {
+          path: 'payloads',
+          select: {
+            'customers': 1
+          }
+        }
+      ]
+    }
+  });
 
+  const launchDocs = response.data.docs;
+  for (const launchDoc of launchDocs)
+  {
+    const payloads = launchDoc['payloads'];
+    const customers = payloads.flatMap((payload) => {
+      return payload['customers']
+    });
+
+
+   const launch = {
+      flightNumber: launchDoc['flight_number'],
+      mission: launchDoc['name'],
+      rocket: launchDoc['rocket']['name'],
+      launchDate: launchDoc['date_local'],
+      upcoming: launchDoc['upcoming'],
+      success: launchDoc['success'],
+      customers,
+    };
+
+    console.log(`${launch.flightNumber} ${launch.mission}`);
+    }
+}
 async function getAllLaunches() {
 
   return await launchesDatabase.find({}, {
@@ -101,5 +149,6 @@ module.exports = {
   addNewLaunch,
   launchExist,
   abortLaunch,
-  scheduleNewLaunch
+  scheduleNewLaunch,
+  loadLaunchData
 }
